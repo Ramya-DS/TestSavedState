@@ -1,16 +1,18 @@
 package com.example.testsavedstate
 
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
-import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.io.File
@@ -19,7 +21,7 @@ import java.text.SimpleDateFormat
 /**
  * A simple [Fragment] subclass.
  */
-class ListFolder() : Fragment(), OnViewHolderClickListener {
+class ListFolder(var mOnAdapterChangeListener: OnAdapterChangeListener,var mOnFileChangedListener: OnFileChangedListener) : Fragment(), OnViewHolderClickListener {
 
     companion object {
         var formatter = SimpleDateFormat("dd/MM/yyyy hh:mm:ss")
@@ -31,8 +33,9 @@ class ListFolder() : Fragment(), OnViewHolderClickListener {
 
     private lateinit var rootView: View
     private lateinit var recyclerView: RecyclerView
-    var path: File=Environment.getExternalStorageDirectory()
-    var folders= ArrayList<Folder>()
+    lateinit var path: String
+    var folders = ArrayList<Folder>()
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,16 +54,21 @@ class ListFolder() : Fragment(), OnViewHolderClickListener {
         return rootView
     }
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val bundle: Bundle = arguments!!
-        path=File(bundle.getString("path")!!)
+        retainInstance = true
+        arguments?.let {
+            val bundle: Bundle = it
+            path = bundle.getString("path")!!
+        }
     }
 
     private fun checkFolders(): Boolean {
-        if (path.exists()) {
-            if (path.isDirectory && path.listFiles() != null) {
-                folders = directoryToFolder(path.listFiles()!!)
+        val checkPath = File(path)
+        if (checkPath.exists()) {
+            if (checkPath.isDirectory && checkPath.listFiles() != null) {
+                folders = directoryToFolder(checkPath.listFiles()!!)
                 return true
             }
         } else {
@@ -118,21 +126,34 @@ class ListFolder() : Fragment(), OnViewHolderClickListener {
     }
 
     override fun onViewHolderClick(position: Int) {
-        path = File(folders[position].path)
+        path = folders[position].path
+
 
         if (checkFolders()) {
+            mOnAdapterChangeListener.onAdapterChangeListener(path)
             recyclerView.adapter = FoldersAdapter(folders, this)
         } else {
-            path = path.parentFile!!
+            val fragment = SingleFile()
+            val bundle = Bundle()
+            bundle.putString("name", folders[position].name)
+            bundle.putString("type", folders[position].type)
+            bundle.putInt("image", folders[position].typeImage)
+            bundle.putLong("size", folders[position].size)
+            bundle.putString("date", folders[position].lastModifiedDate)
+            bundle.putString("path", folders[position].path)
+
+            mOnFileChangedListener.onFileChanged(bundle)
+
+            fragment.arguments = bundle
             if (activity!!.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
                 activity!!.supportFragmentManager.beginTransaction()
-                    .replace(R.id.masterContainer, SingleFile(folders[position]))
+                    .replace(R.id.masterContainer, fragment)
                     .addToBackStack("detail3").commit()
 
             } else {
                 activity!!.supportFragmentManager.beginTransaction().replace(
                     R.id.detailContainer,
-                    SingleFile(folders[position])
+                    fragment
                 ).addToBackStack("detail4").commit()
             }
         }
@@ -143,14 +164,18 @@ class ListFolder() : Fragment(), OnViewHolderClickListener {
         super.onAttach(context)
         val callback: OnBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-//                if(currentFile!=null)
-//                {
-//                    activity!!.supportFragmentManager.popBackStack(0,POP_BACK_STACK_INCLUSIVE)
-//                    currentFile =null
-//                    return
-//                }
-                if (path.parentFile != null) {
-                    path = path.parentFile!!
+
+                if (activity!!.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    val frag =
+                        activity!!.supportFragmentManager.findFragmentById(R.id.detailContainer)
+                    frag?.let {
+                        activity!!.supportFragmentManager.popBackStack(0, POP_BACK_STACK_INCLUSIVE)
+                        mOnFileChangedListener.onFileChanged(null)
+                    }
+                }
+                if (File(path).parentFile != null) {
+                    path = File(path).parent!!
+                    mOnAdapterChangeListener.onAdapterChangeListener(path)
                     folders.clear()
                     recyclerView.adapter = FoldersAdapter(folders, this@ListFolder)
                     if (checkFolders()) {
@@ -165,3 +190,4 @@ class ListFolder() : Fragment(), OnViewHolderClickListener {
     }
 
 }
+

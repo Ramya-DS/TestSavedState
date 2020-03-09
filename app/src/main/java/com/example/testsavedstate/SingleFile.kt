@@ -17,14 +17,13 @@ import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
 /**
  * A simple [Fragment] subclass.
  */
-class SingleFile(var files: Folder) : Fragment() {
+class SingleFile() : Fragment() {
 
     companion object {
         const val TAG = "SingleFile"
-        var currentFile: Folder? = null
     }
 
-    //    lateinit var currentFile: Folder
+    private lateinit var files: Folder
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -39,8 +38,21 @@ class SingleFile(var files: Folder) : Fragment() {
         return root
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        currentFile = files
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val bundle = arguments
+        bundle?.let {
+            files = Folder(
+                it.getString("name")!!,
+                it.getString("type")!!,
+                it.getInt("image"),
+                it.getLong("size"),
+                it.getString("date")!!,
+                it.getString("path")!!
+            )
+
+
+        }
     }
 }

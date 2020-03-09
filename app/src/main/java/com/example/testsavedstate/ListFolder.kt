@@ -21,7 +21,10 @@ import java.text.SimpleDateFormat
 /**
  * A simple [Fragment] subclass.
  */
-class ListFolder(var mOnAdapterChangeListener: OnAdapterChangeListener,var mOnFileChangedListener: OnFileChangedListener) : Fragment(), OnViewHolderClickListener {
+class ListFolder(
+    var mOnAdapterChangeListener: OnAdapterChangeListener,
+    var mOnFileChangedListener: OnFileChangedListener
+) : Fragment(), OnViewHolderClickListener {
 
     companion object {
         var formatter = SimpleDateFormat("dd/MM/yyyy hh:mm:ss")
@@ -57,7 +60,6 @@ class ListFolder(var mOnAdapterChangeListener: OnAdapterChangeListener,var mOnFi
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        retainInstance = true
         arguments?.let {
             val bundle: Bundle = it
             path = bundle.getString("path")!!

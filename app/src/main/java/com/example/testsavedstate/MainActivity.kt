@@ -25,14 +25,15 @@ class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedL
     private var path: Bundle?=null
     private var file: Bundle? = null
 
+    var manager=supportFragmentManager
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        supportFragmentManager.addOnBackStackChangedListener {
-            var i=supportFragmentManager.backStackEntryCount-1
+        manager.addOnBackStackChangedListener {
+            var i=manager.backStackEntryCount-1
             while(i>=0){
-               Log.i(supportFragmentManager.getBackStackEntryAt(i).name,"$i")
+               Log.i(manager.getBackStackEntryAt(i).name,"$i")
                 i--
             }
         }
@@ -46,67 +47,41 @@ class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedL
         val bundle = Bundle()
         bundle.putString("path", Environment.getExternalStorageDirectory().path)
         fragmentMaster.arguments = bundle
-        supportFragmentManager.beginTransaction()
-            .add(R.id.masterContainer, fragmentMaster, "master").commit()
+        manager.beginTransaction()
+            .replace(R.id.masterContainer, fragmentMaster, "master").commit()
 
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
-        supportFragmentManager.executePendingTransactions()
+        manager.executePendingTransactions()
         super.onConfigurationChanged(newConfig)
         setContentView(R.layout.activity_main)
         Log.i("Config Change", " ")
 
-
-//        var fragmentById: Fragment? = supportFragmentManager.findFragmentById(R.id.masterContainer)
-
-//        if (fragmentById != null) {
-//            if (fragmentById is ListFolder) {
-//                supportFragmentManager.beginTransaction()
-//                    .remove(fragmentById).commit()
-//            } else if (fragmentById is SingleFile) {
-//                file= fragmentById.arguments
-//            }
-//
-//        }
-//
-//        supportFragmentManager.executePendingTransactions()
-//        fragmentById =
-//            supportFragmentManager.findFragmentById(R.id.detailContainer)
-//        if (fragmentById != null) {
-//            file = fragmentById.arguments
-//            supportFragmentManager.beginTransaction()
-//                .remove(fragmentById).commit()
-//        }
+        manager.popBackStack(0, POP_BACK_STACK_INCLUSIVE)
 
 
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//            if (File(path).parentFile != Environment.getExternalStorageDirectory())
-//                path = File(path).parent!!
             val fragmentMaster = ListFolder(this,this)
             fragmentMaster.arguments = path
-
-            supportFragmentManager.beginTransaction()
+            manager.beginTransaction()
                 .replace(R.id.masterContainer, fragmentMaster)
                 .commit()
-
-
 
             file?.let {
                 val fragment = SingleFile()
                 fragment.arguments = file
-                supportFragmentManager.beginTransaction()
+                manager.beginTransaction()
                     .replace(R.id.detailContainer, fragment)
                     .addToBackStack("detail1")
                     .commit()
             }
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
 
-
             val fragmentMaster = ListFolder(this,this)
             fragmentMaster.arguments = path
 
-            supportFragmentManager.beginTransaction()
+            manager.beginTransaction()
                 .replace(R.id.masterContainer, fragmentMaster)
                 .commit()
 
@@ -153,7 +128,7 @@ class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedL
     override fun onBackPressed() {
         if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT && file != null) {
 
-                supportFragmentManager.popBackStack(0, POP_BACK_STACK_INCLUSIVE)
+            manager.popBackStack(0, POP_BACK_STACK_INCLUSIVE)
                 file = null
 
         } else {

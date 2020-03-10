@@ -23,7 +23,8 @@ import java.text.SimpleDateFormat
  */
 class ListFolder(
     var mOnAdapterChangeListener: OnAdapterChangeListener,
-    var mOnFileChangedListener: OnFileChangedListener,var mDetailPaneVisibility: DetailPaneVisibility
+    var mOnFileChangedListener: OnFileChangedListener,
+    var mDetailPaneVisibility: DetailPaneVisibility
 ) : Fragment(), OnViewHolderClickListener {
     companion object {
         var formatter = SimpleDateFormat("dd/MM/yyyy hh:mm:ss")
@@ -134,7 +135,7 @@ class ListFolder(
             mOnAdapterChangeListener.onAdapterChangeListener(path)
             recyclerView.adapter = FoldersAdapter(folders, this)
         } else {
-            path=File(path).parent!!
+            path = File(path).parent!!
             val fragment = SingleFile()
             val bundle = Bundle()
             bundle.putString("name", folders[position].name)

@@ -1,6 +1,6 @@
 package com.example.testsavedstate
 
-data class Folder (
+data class Folder(
     var name: String,
     var type: String,
     var typeImage: Int,

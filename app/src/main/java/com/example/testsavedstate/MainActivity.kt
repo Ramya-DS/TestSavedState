@@ -30,8 +30,8 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
         const val REQUEST_PERMISSION = 1234
     }
 
-    private var path: Bundle? = Bundle().apply{
-        this.putString("path",Environment.getExternalStorageDirectory().path)
+    private var path: Bundle? = Bundle().apply {
+        this.putString("path", Environment.getExternalStorageDirectory().path)
     }
     private var file: Bundle? = null
 
@@ -40,13 +40,13 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        manager.addOnBackStackChangedListener {
-            var i = manager.backStackEntryCount - 1
-            while (i >= 0) {
-                Log.i(manager.getBackStackEntryAt(i).name, "$i")
-                i--
-            }
-        }
+//        manager.addOnBackStackChangedListener {
+//            var i = manager.backStackEntryCount - 1
+//            while (i >= 0) {
+//                Log.i(manager.getBackStackEntryAt(i).name, "$i")
+//                i--
+//            }
+//        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             if (ContextCompat.checkSelfPermission(
@@ -139,11 +139,8 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_PERMISSION && grantResults.isNotEmpty()&& grantResults[0]==PackageManager.PERMISSION_GRANTED) {
-            onResume()
-        }
-        else{
-            Toast.makeText(this,"PERMISSION DENIED", Toast.LENGTH_SHORT).show()
+        if (requestCode != REQUEST_PERMISSION || !grantResults.isNotEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "PERMISSION DENIED", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -159,7 +156,6 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
             }
             super.onBackPressed()
         }
-
     }
 
     override fun onAdapterChangeListener(currentPath: String) {

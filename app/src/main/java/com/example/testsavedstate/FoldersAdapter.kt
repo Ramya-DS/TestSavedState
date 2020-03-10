@@ -7,16 +7,20 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class FoldersAdapter(private var folders: List<Folder>, var mOnViewHolderClickListener: OnViewHolderClickListener) :
+class FoldersAdapter(
+    private var folders: List<Folder>,
+    var mOnViewHolderClickListener: OnViewHolderClickListener
+) :
     RecyclerView.Adapter<FoldersAdapter.FolderViewHolder>() {
 
     class FolderViewHolder(
         itemView: View,
         var onViewHolderClickListener: OnViewHolderClickListener
     ) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
-        init{
+        init {
             itemView.setOnClickListener(this)
         }
+
         var fileImage: ImageView = itemView.findViewById(R.id.fileTypeImage)
         var fileName: TextView = itemView.findViewById(R.id.fileName)
         var fileSize: TextView = itemView.findViewById(R.id.fileSize)

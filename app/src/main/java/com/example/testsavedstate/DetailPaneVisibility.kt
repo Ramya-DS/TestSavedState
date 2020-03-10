@@ -2,5 +2,5 @@ package com.example.testsavedstate
 
 interface DetailPaneVisibility {
 
-    fun DetailVisiblity(flag: Boolean)
+    fun detailVisiblity(flag: Boolean)
 }

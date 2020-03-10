@@ -1,9 +1,7 @@
 package com.example.testsavedstate
 
 
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -21,11 +19,7 @@ import java.text.SimpleDateFormat
 /**
  * A simple [Fragment] subclass.
  */
-class ListFolder(
-    var mOnAdapterChangeListener: OnAdapterChangeListener,
-    var mOnFileChangedListener: OnFileChangedListener,
-    var mDetailPaneVisibility: DetailPaneVisibility
-) : Fragment(), OnViewHolderClickListener {
+class ListFolder : Fragment(), OnViewHolderClickListener {
     companion object {
         var formatter = SimpleDateFormat("dd/MM/yyyy hh:mm:ss")
         val document = arrayListOf("doc", "txt", "docx", "pdf", "html", "ppt", "xlxs", "mhtml")
@@ -33,6 +27,10 @@ class ListFolder(
         val video = arrayListOf("mp4", "avi", "mkv")
         val image = arrayListOf("png", "jpeg", "gif", "jpg")
     }
+
+    var mDetailPaneVisibility: DetailPaneVisibility? = null
+    var mOnAdapterChangeListener: OnAdapterChangeListener?=null
+    var mOnFileChangedListener: OnFileChangedListener?=null
 
     private lateinit var rootView: View
     private lateinit var recyclerView: RecyclerView
@@ -132,7 +130,7 @@ class ListFolder(
 
 
         if (checkFolders()) {
-            mOnAdapterChangeListener.onAdapterChangeListener(path)
+            mOnAdapterChangeListener!!.onAdapterChangeListener(path)
             recyclerView.adapter = FoldersAdapter(folders, this)
         } else {
             path = File(path).parent!!
@@ -145,7 +143,7 @@ class ListFolder(
             bundle.putString("date", folders[position].lastModifiedDate)
             bundle.putString("path", folders[position].path)
 
-            mOnFileChangedListener.onFileChanged(bundle)
+            mOnFileChangedListener!!.onFileChanged(bundle)
 
             fragment.arguments = bundle
             if (activity!!.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
@@ -154,7 +152,7 @@ class ListFolder(
                     .addToBackStack("detail3").commit()
 
             } else {
-                mDetailPaneVisibility.DetailVisiblity(true)
+                mDetailPaneVisibility!!.detailVisiblity(true)
                 activity!!.supportFragmentManager.beginTransaction().replace(
                     R.id.detailContainer,
                     fragment
@@ -168,6 +166,13 @@ class ListFolder(
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
+
+        mDetailPaneVisibility = context as? DetailPaneVisibility
+        mOnAdapterChangeListener=context as OnAdapterChangeListener
+        mOnFileChangedListener=context as OnFileChangedListener
+        if (mDetailPaneVisibility == null|| mOnAdapterChangeListener==null || mOnFileChangedListener==null) {
+            throw ClassCastException("$context must implement OnArticleSelectedListener")
+        }
         val callback: OnBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
 
@@ -177,13 +182,13 @@ class ListFolder(
                     frag?.let {
 
                         activity!!.supportFragmentManager.popBackStack(0, POP_BACK_STACK_INCLUSIVE)
-                        mDetailPaneVisibility.DetailVisiblity(false)
-                        mOnFileChangedListener.onFileChanged(null)
+                        mDetailPaneVisibility!!.detailVisiblity(false)
+                        mOnFileChangedListener!!.onFileChanged(null)
                     }
                 }
                 if (File(path).parentFile != null) {
                     path = File(path).parent!!
-                    mOnAdapterChangeListener.onAdapterChangeListener(path)
+                    mOnAdapterChangeListener!!.onAdapterChangeListener(path)
                     folders.clear()
                     recyclerView.adapter = FoldersAdapter(folders, this@ListFolder)
                     if (checkFolders()) {

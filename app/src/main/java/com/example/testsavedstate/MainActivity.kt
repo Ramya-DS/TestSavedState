@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                val fragmentMaster = ListFolder(this, this, this)
+                val fragmentMaster = ListFolder()
                 val bundle = Bundle()
                 bundle.putString("path", Environment.getExternalStorageDirectory().path)
                 fragmentMaster.arguments = bundle
@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
             } else
                 requestPermissions(permissions, REQUEST_PERMISSION)
         } else {
-            val fragmentMaster = ListFolder(this, this, this)
+            val fragmentMaster = ListFolder()
             val bundle = Bundle()
             bundle.putString("path", Environment.getExternalStorageDirectory().path)
             fragmentMaster.arguments = bundle
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
 
 
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            val fragmentMaster = ListFolder(this, this, this)
+            val fragmentMaster = ListFolder()
             fragmentMaster.arguments = path
             manager.beginTransaction()
                 .replace(R.id.masterContainer, fragmentMaster)
@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
             }
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
 
-            val fragmentMaster = ListFolder(this, this, this)
+            val fragmentMaster = ListFolder()
             fragmentMaster.arguments = path
 
             manager.beginTransaction()
@@ -116,7 +116,7 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_PERMISSION && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            val fragmentMaster = ListFolder(this, this, this)
+            val fragmentMaster = ListFolder()
             val bundle = Bundle()
             bundle.putString("path", Environment.getExternalStorageDirectory().path)
             fragmentMaster.arguments = bundle
@@ -183,7 +183,7 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
         file = currentFile
     }
 
-    override fun DetailVisiblity(flag: Boolean) {
+    override fun detailVisiblity(flag: Boolean) {
         val view = findViewById<View>(R.id.detailContainer)
         view.visibility = if (flag) View.VISIBLE else View.GONE
     }

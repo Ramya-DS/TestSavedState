@@ -1,25 +1,19 @@
 package com.example.testsavedstate
 
-import android.app.ActivityManager
-import android.app.AlertDialog
-import android.content.Context
+import android.app.PendingIntent.getActivity
 import android.content.DialogInterface
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.Settings
 import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
-import androidx.fragment.app.ListFragment
-import java.io.File
-import java.util.jar.Manifest
 
 
 class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChangedListener,
@@ -40,29 +34,33 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//        manager.addOnBackStackChangedListener {
-//            var i = manager.backStackEntryCount - 1
-//            while (i >= 0) {
-//                Log.i(manager.getBackStackEntryAt(i).name, "$i")
-//                i--
-//            }
-//        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    android.Manifest.permission.READ_EXTERNAL_STORAGE
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestStoragePermission()
+        manager.addOnBackStackChangedListener {
+            var i = manager.backStackEntryCount - 1
+            while (i >= 0) {
+                Log.i(manager.getBackStackEntryAt(i).name, "$i")
+                i--
             }
+        }
 
-        val fragmentMaster = ListFolder(this, this, this)
-        val bundle = Bundle()
-        bundle.putString("path", Environment.getExternalStorageDirectory().path)
-        fragmentMaster.arguments = bundle
-        manager.beginTransaction()
-            .replace(R.id.masterContainer, fragmentMaster, "master").commit()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                val fragmentMaster = ListFolder(this, this, this)
+                val bundle = Bundle()
+                bundle.putString("path", Environment.getExternalStorageDirectory().path)
+                fragmentMaster.arguments = bundle
+                manager.beginTransaction()
+                    .replace(R.id.masterContainer, fragmentMaster, "master").commit()
+            } else
+                requestPermissions(permissions, REQUEST_PERMISSION)
+        } else {
+            val fragmentMaster = ListFolder(this, this, this)
+            val bundle = Bundle()
+            bundle.putString("path", Environment.getExternalStorageDirectory().path)
+            fragmentMaster.arguments = bundle
+            manager.beginTransaction()
+                .replace(R.id.masterContainer, fragmentMaster, "master").commit()
+        }
+
 
     }
 
@@ -111,36 +109,52 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
 
     }
 
-    private fun requestStoragePermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (shouldShowRequestPermissionRationale(android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
-
-                androidx.appcompat.app.AlertDialog.Builder(this)
-                    .setTitle("Permission is needed")
-                    .setMessage("This permission is essential for the working of the application")
-                    .setPositiveButton("Ok") { dialogInterface: DialogInterface, i: Int ->
-                        requestPermissions(permissions, REQUEST_PERMISSION)
-                    }
-                    .setNegativeButton("Cancel") { dialog, which ->
-                        dialog.dismiss()
-                    }
-                    .create().show()
-
-            } else {
-                requestPermissions(permissions, REQUEST_PERMISSION)
-            }
-        }
-
-    }
-
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode != REQUEST_PERMISSION || !grantResults.isNotEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "PERMISSION DENIED", Toast.LENGTH_SHORT).show()
+        if (requestCode == REQUEST_PERMISSION && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            val fragmentMaster = ListFolder(this, this, this)
+            val bundle = Bundle()
+            bundle.putString("path", Environment.getExternalStorageDirectory().path)
+            fragmentMaster.arguments = bundle
+            manager.beginTransaction()
+                .replace(R.id.masterContainer, fragmentMaster, "master").commit()
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && shouldShowRequestPermissionRationale(
+                android.Manifest.permission.READ_EXTERNAL_STORAGE
+            )
+        ) {
+
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Permission is needed")
+                .setMessage("This permission is essential for the working of the application")
+                .setPositiveButton("Ok") { dialogInterface: DialogInterface, i: Int ->
+                    requestPermissions(Companion.permissions, REQUEST_PERMISSION)
+                }
+                .setNegativeButton("Cancel") { dialog, which ->
+                    dialog.dismiss()
+                }
+                .create().show()
+        } else {
+//            val myAppSettings = Intent(
+//                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+//                Uri.parse("package:$packageName")
+//            )
+//            finish()
+//            myAppSettings.addCategory(Intent.CATEGORY_DEFAULT)
+//            myAppSettings.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+//            startActivityForResult(myAppSettings, 168)
+
+            val i = Intent()
+            i.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+            i.addCategory(Intent.CATEGORY_DEFAULT)
+            i.data = Uri.parse("package:" + getPackageName())
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY)
+            i.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
+            startActivity(i)
         }
     }
 
@@ -156,6 +170,7 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
             }
             super.onBackPressed()
         }
+
     }
 
     override fun onAdapterChangeListener(currentPath: String) {

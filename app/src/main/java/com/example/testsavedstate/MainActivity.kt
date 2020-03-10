@@ -1,7 +1,9 @@
 package com.example.testsavedstate
 
 import android.app.ActivityManager
+import android.app.AlertDialog
 import android.content.Context
+import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
@@ -9,42 +11,53 @@ import android.os.Bundle
 import android.os.Environment
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
 import androidx.fragment.app.ListFragment
 import java.io.File
+import java.util.jar.Manifest
 
 
-class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedListener, DetailPaneVisibility {
+class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChangedListener,
+    DetailPaneVisibility {
     companion object {
         val permissions = arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE)
         const val PERMISSION_COUNT = 1
         const val REQUEST_PERMISSION = 1234
     }
 
-    private var path: Bundle?=null
+    private var path: Bundle? = Bundle().apply{
+        this.putString("path",Environment.getExternalStorageDirectory().path)
+    }
     private var file: Bundle? = null
 
-    var manager=supportFragmentManager
+    var manager = supportFragmentManager
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         manager.addOnBackStackChangedListener {
-            var i=manager.backStackEntryCount-1
-            while(i>=0){
-               Log.i(manager.getBackStackEntryAt(i).name,"$i")
+            var i = manager.backStackEntryCount - 1
+            while (i >= 0) {
+                Log.i(manager.getBackStackEntryAt(i).name, "$i")
                 i--
             }
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && isPermissionDenied()) {
-            requestPermissions(permissions, REQUEST_PERMISSION)
-            return
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestStoragePermission()
+            }
 
-        val fragmentMaster = ListFolder(this,this,this)
+        val fragmentMaster = ListFolder(this, this, this)
         val bundle = Bundle()
         bundle.putString("path", Environment.getExternalStorageDirectory().path)
         fragmentMaster.arguments = bundle
@@ -63,7 +76,7 @@ class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedL
 
 
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            val fragmentMaster = ListFolder(this,this,this)
+            val fragmentMaster = ListFolder(this, this, this)
             fragmentMaster.arguments = path
             manager.beginTransaction()
                 .replace(R.id.masterContainer, fragmentMaster)
@@ -79,7 +92,7 @@ class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedL
             }
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
 
-            val fragmentMaster = ListFolder(this,this,this)
+            val fragmentMaster = ListFolder(this, this, this)
             fragmentMaster.arguments = path
 
             manager.beginTransaction()
@@ -98,18 +111,27 @@ class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedL
 
     }
 
-    private fun isPermissionDenied(): Boolean {
+    private fun requestStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            var p = 0
-            while (p < PERMISSION_COUNT) {
-                if (checkSelfPermission(permissions[p]) != PackageManager.PERMISSION_GRANTED)
-                    return true
-                p++
+            if (shouldShowRequestPermissionRationale(android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Permission is needed")
+                    .setMessage("This permission is essential for the working of the application")
+                    .setPositiveButton("Ok") { dialogInterface: DialogInterface, i: Int ->
+                        requestPermissions(permissions, REQUEST_PERMISSION)
+                    }
+                    .setNegativeButton("Cancel") { dialog, which ->
+                        dialog.dismiss()
+                    }
+                    .create().show()
+
+            } else {
+                requestPermissions(permissions, REQUEST_PERMISSION)
             }
         }
-        return false
-    }
 
+    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -117,12 +139,11 @@ class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedL
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_PERMISSION && grantResults.isNotEmpty()) {
-            if (isPermissionDenied()) {
-                (this.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).clearApplicationUserData()
-                recreate()
-            } else
-                onResume()
+        if (requestCode == REQUEST_PERMISSION && grantResults.isNotEmpty()&& grantResults[0]==PackageManager.PERMISSION_GRANTED) {
+            onResume()
+        }
+        else{
+            Toast.makeText(this,"PERMISSION DENIED", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -130,29 +151,30 @@ class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedL
         if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT && file != null) {
 
             manager.popBackStack(0, POP_BACK_STACK_INCLUSIVE)
-                file = null
+            file = null
 
         } else {
-            if(file!=null){
-                file=null
+            if (file != null) {
+                file = null
             }
+            Log.i("Visibility", findViewById<View>(R.id.detailContainer).visibility.toString())
             super.onBackPressed()
         }
 
     }
 
     override fun onAdapterChangeListener(currentPath: String) {
-        val bundle=Bundle()
-        bundle.putString("path",currentPath)
-        path=bundle
+        val bundle = Bundle()
+        bundle.putString("path", currentPath)
+        path = bundle
     }
 
     override fun onFileChanged(currentFile: Bundle?) {
-        file=currentFile
+        file = currentFile
     }
 
     override fun DetailVisiblity(flag: Boolean) {
-       val view= findViewById<View>(R.id.detailContainer)
-        view.visibility=if(flag) View.VISIBLE else View.GONE
+        val view = findViewById<View>(R.id.detailContainer)
+        view.visibility = if (flag) View.VISIBLE else View.GONE
     }
 }

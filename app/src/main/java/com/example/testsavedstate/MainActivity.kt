@@ -157,7 +157,6 @@ class MainActivity : AppCompatActivity(), OnAdapterChangeListener, OnFileChanged
             if (file != null) {
                 file = null
             }
-            Log.i("Visibility", findViewById<View>(R.id.detailContainer).visibility.toString())
             super.onBackPressed()
         }
 

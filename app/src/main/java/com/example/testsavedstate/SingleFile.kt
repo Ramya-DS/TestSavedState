@@ -23,13 +23,14 @@ class SingleFile() : Fragment() {
         const val TAG = "SingleFile"
     }
 
+    lateinit var root: View
     private lateinit var files: Folder
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
 
-        val root = inflater.inflate(R.layout.fragment_single_file, container, false)
+        root = inflater.inflate(R.layout.fragment_single_file, container, false)
         root.findViewById<ImageView>(R.id.Image).setImageResource(files.typeImage)
         root.findViewById<TextView>(R.id.Name).text = files.name
         root.findViewById<TextView>(R.id.Size).text = files.size.toString()

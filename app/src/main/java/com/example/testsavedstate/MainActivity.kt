@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
@@ -15,7 +16,7 @@ import androidx.fragment.app.ListFragment
 import java.io.File
 
 
-class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedListener {
+class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedListener, DetailPaneVisibility {
     companion object {
         val permissions = arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE)
         const val PERMISSION_COUNT = 1
@@ -43,7 +44,7 @@ class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedL
             return
         }
 
-        val fragmentMaster = ListFolder(this,this)
+        val fragmentMaster = ListFolder(this,this,this)
         val bundle = Bundle()
         bundle.putString("path", Environment.getExternalStorageDirectory().path)
         fragmentMaster.arguments = bundle
@@ -62,7 +63,7 @@ class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedL
 
 
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            val fragmentMaster = ListFolder(this,this)
+            val fragmentMaster = ListFolder(this,this,this)
             fragmentMaster.arguments = path
             manager.beginTransaction()
                 .replace(R.id.masterContainer, fragmentMaster)
@@ -73,12 +74,12 @@ class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedL
                 fragment.arguments = file
                 manager.beginTransaction()
                     .replace(R.id.detailContainer, fragment)
-                    .addToBackStack("detail1")
+//                    .addToBackStack("detail1")
                     .commit()
             }
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
 
-            val fragmentMaster = ListFolder(this,this)
+            val fragmentMaster = ListFolder(this,this,this)
             fragmentMaster.arguments = path
 
             manager.beginTransaction()
@@ -148,5 +149,10 @@ class MainActivity : AppCompatActivity(),OnAdapterChangeListener, OnFileChangedL
 
     override fun onFileChanged(currentFile: Bundle?) {
         file=currentFile
+    }
+
+    override fun DetailVisiblity(flag: Boolean) {
+       val view= findViewById<View>(R.id.detailContainer)
+        view.visibility=if(flag) View.VISIBLE else View.GONE
     }
 }

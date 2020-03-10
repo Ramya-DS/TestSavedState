@@ -23,9 +23,8 @@ import java.text.SimpleDateFormat
  */
 class ListFolder(
     var mOnAdapterChangeListener: OnAdapterChangeListener,
-    var mOnFileChangedListener: OnFileChangedListener
+    var mOnFileChangedListener: OnFileChangedListener,var mDetailPaneVisibility: DetailPaneVisibility
 ) : Fragment(), OnViewHolderClickListener {
-
     companion object {
         var formatter = SimpleDateFormat("dd/MM/yyyy hh:mm:ss")
         val document = arrayListOf("doc", "txt", "docx", "pdf", "html", "ppt", "xlxs", "mhtml")
@@ -135,6 +134,7 @@ class ListFolder(
             mOnAdapterChangeListener.onAdapterChangeListener(path)
             recyclerView.adapter = FoldersAdapter(folders, this)
         } else {
+            path=File(path).parent!!
             val fragment = SingleFile()
             val bundle = Bundle()
             bundle.putString("name", folders[position].name)
@@ -153,10 +153,13 @@ class ListFolder(
                     .addToBackStack("detail3").commit()
 
             } else {
+                mDetailPaneVisibility.DetailVisiblity(true)
                 activity!!.supportFragmentManager.beginTransaction().replace(
                     R.id.detailContainer,
                     fragment
-                ).addToBackStack("detail4").commit()
+                )
+//                    .addToBackStack("detail4")
+                    .commit()
             }
         }
 
@@ -171,7 +174,9 @@ class ListFolder(
                     val frag =
                         activity!!.supportFragmentManager.findFragmentById(R.id.detailContainer)
                     frag?.let {
+
                         activity!!.supportFragmentManager.popBackStack(0, POP_BACK_STACK_INCLUSIVE)
+                        mDetailPaneVisibility.DetailVisiblity(false)
                         mOnFileChangedListener.onFileChanged(null)
                     }
                 }
